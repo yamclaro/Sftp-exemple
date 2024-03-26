@@ -1,0 +1,34 @@
+name: .NET
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    steps:
+     - uses: actions/checkout@v4
+     - name: Setup .NET
+       uses: actions/setup-dotnet@v4
+       with:
+         dotnet-version: 8.0.x
+     - name: Restore dependencies
+       run: dotnet restore
+     - name: Build
+       run: dotnet build --no-restore 	  
+     - name: Test
+       run: dotnet test --no-build --verbosity normal
+     - name: Publish
+       run: dotnet publish --configuration Release
+     - name: Publish to FTP
+       uses: SamKirkland/FTP-Deploy-Action@3.1.1  # Usar uma ação de terceiros para fazer o deploy via FTP
+       with:
+        server: ${{ secrets.FTP_SERVER }}  # Variável de ambiente contendo o endereço do servidor FTP
+        username: ${{ secrets.FTP_USERNAME }}  # Variável de ambiente contendo o nome de usuário do FTP
+        password: ${{ secrets.FTP_PASSWORD }}  # Variável de ambiente contendo a senha do FTP
+        local-dir: ${{ github.workspace }}/bin/Release/net8.0/publish # Diretório local contendo os arquivos que deseja publicar
+        remote-dir: /httpdocs  # Diretório remoto no servidor FTP onde deseja publicar os arquivos 
